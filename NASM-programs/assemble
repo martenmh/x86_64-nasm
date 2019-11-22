@@ -1,9 +1,0 @@
-#!/bin/bash
-
-nasm -f elf64 "${1}"
-
-name=$(echo "${1}" | cut -f 1 -d '.')
-
-ld "${name}.o"
-./a.out
-rm a.out ${name}.o

@@ -22,7 +22,7 @@ _printLoop:
     cmp cl, 0       ; if cl == 0 it is the end (null terminated string)
     jne _printLoop  ; loop until cl hits the null terminated string
 
-    mov rax, 1
+    mov rax, 1      ; sys_write ( just print it )
     mov rdi, 1
     pop rsi         ; pop the pointer from rax to rsi (argument for sys_write)
     mov rdx, rbx

@@ -17,7 +17,7 @@ Created by martenmh.
   * [Some Instructions](#some-instructions)
   * [Write some NASM!](#write-some-nasm-)
       - [Defining main](#defining-main)
-      - [Assembling](#assembling)
+      - [Assembling](#assembling)Sof
   * [Registers #2](#registers--2)
     + [Flags](#flags)
     + [Pointers](#pointers)
@@ -672,8 +672,294 @@ section .data
 ```
 
 ## Subroutine programs
+These 2 programs show how you don't have to manually add the number of characters for a print statement but calculate it in 2 different ways:
+* Print string v2 shows how to do it with a for loop.
+* Print string v3 shows how to do it by doing a simple NASM calculation `msgLen  equ  $-msg`.
 ### Program: Print string v2
+```
+section .text
+    global _start
+_start:
+    mov rax, text
+    call _print
+
+_exit:
+    mov rax, 60     ; sys_exit
+    mov rdi, 0      ; exit code 0
+    syscall
+
+;input: rax as pointer to string
+;output: print string at rax
+_print:
+    push rax    ; save rax for later
+    mov rbx, 0  ; rbx as counter
+
+_printLoop:
+    inc rax         ; point to next value in the string
+    inc rbx         ; add 1 to the counter
+    mov cl, [rax]   ; move value of the character to lower byte of cl
+    cmp cl, 0       ; if cl == 0 it is the end (null terminated string)
+    jne _printLoop  ; loop until cl hits the null terminated string
+
+    mov rax, 1      ; sys_write ( just print it )
+    mov rdi, 1
+    pop rsi         ; pop the pointer from rax to rsi (argument for sys_write)
+    mov rdx, rbx
+    syscall
+    ret
+
+section .data
+    text db "Hello, World!", 10,0   ; ,0 for null terminating string
+```
 ### Program: Print string v3 (simple)
+```
+section .text
+    global _start
+_start:
+    mov rax, 1      ; sys_write
+    mov rdi, 1      ; standard output
+    mov rsi, msg    ; msg buffer
+    mov rdx, msgLen ; message length
+    syscall
+
+    call _exit
+
+_exit:
+    mov rax, 60     ; sys_exit
+    mov rdi, 0      ; exit code 0
+    syscall
+
+section .data
+    msg     db "Hello, World!", 10	; newline = ', 10'
+    msgLen  equ  $-msg  ; calculate string length with NASM
+```
+
+## NASM macros
+> Note, macros are specific to the assembly language and will be dealt with differently in different languages.
+
+Macros is a single instruction that expands into a predefined set of instructions to perform a particular task.
+```
+exit
+```
+could be:
+```
+mov rax, 60
+mov rdi, 0
+syscall 
+```
+
+### Syntax
+Defining a macro:
+```
+%macro <name> <argc>
+    ...
+    <macro body>
+    ...
+%endmacro
+```
+Example, exit macro:
+```
+%macro exit 0
+    mov rax, 60
+    mov rdi, 0
+    syscall
+%endmacro
+```
+### Inputs
+Using inputs with macro's:
+
+<argc> is the number of arguments the macro takes.
+These inputs are referenced (inside the macro) using `%1` for the first input, `%2` for the second, etc..
+
+Example:
+```
+%macro printDigit 1
+    mov rax, %1
+    call _printRAXDigit
+%endmacro
+
+_start:
+    printDigit 3
+    printDigit 4
+    
+    exit
+```
+if args > 1, then a comma is used between inputs.
+
+Example:
+```
+%macro printDigitSum 2
+    mov rax, %1
+    add rax, %2
+    call _printRAXDigit
+%endmacro
+
+_start:
+    printDigitSum 3, 2
+    exit
+```
+
+### Local labels
+> Macros are expanded upon compilation into predefined code. 
+> So if the code contains a label, it can cause duplicate label error if the macro is used more than once.
+
+So this:
+```
+%macro freeze 0
+_loop:
+    jmp _loop
+%endmacro
+
+_start:
+    freeze
+    freeze
+    exit
+```
+Expands out to:
+```
+_start:
+_loop:
+    jmp _loop
+_loop:
+    jmp _loop
+    
+    mov rax, 60
+    mov rdi, 0
+    syscall
+```
+Causes: `Redefined Symbol Error`
+
+To solve this we can use `%%` before label names within a macro, 
+this will make it so that the label is unique every time it is expanded.
+
+This:
+```
+%macro freeze 0
+_loop:
+    jmp _loop
+%endmacro
+```
+Becomes:
+```
+%macro freeze 0
+%%loop:
+    jmp %%loop
+%endmacro
+```
+
+### Defining values with EQU (C/C++ Like defines)
+
+For example:
+```
+STDIN equ 0
+STDOUT equ 1
+STDERR equ 2
+
+SYS_READ equ 0
+SYS_WRITE equ 1
+SYS_EXIT equ 60
+
+_start
+    mov rax, SYS_WRITE
+    mov rdi, STDOUT
+    ; etc..
+    mov rax, SYS_EXIT
+    mov rdi, 0
+    syscall
+```
+
+### Including external files
+
+"Include" will load an external file's code and insert it into the position 
+in which it is included upon compilation.
+```
+%include "filename.asm"
+```
+Example:
+```
+%include "linux64.inc"
+
+section .data
+    text db "Hello, World!",10,0
+section .text
+    global _start
+    
+_start:
+    print text
+    exit
+```
+
+### Program: input with macros
+A simple program that shows your input, 
+but now with a hidden and repeatable interface.
+
+.asm file:
+```
+%include "file.inc"   ; include the macros.inc file, which places all code at this location to be used later in the program.
+
+section .data
+    msg db "Hello, what would you like to input? ",0
+    msg2 db "Your input: ",0
+
+section .text
+    Global _start
+_start:
+    print msg
+    getInput
+    print msg2
+    print input
+    exit 0          ; exit with error code 0
+```
+.inc file:
+```
+SYS_READ equ 0      ; define sys_read
+SYS_WRITE equ 1     ; define sys_write
+SYS_EXIT equ 60     ; define sys_exit
+
+STDIN equ 0         ; define stdin
+STDOUT equ 1        ; define stdout
+STDERR equ 2        ; define stderr
+
+%macro exit 1       ; create a macro with input of error code
+    mov rax, SYS_EXIT
+    mov rdi, %1
+    syscall
+%endmacro
+
+%macro print 1      ; create a macro with input of to be printed message
+    mov rax, %1     ; point rax to message (char *c = &msg or char *c = msg[0])
+    mov rbx, 0      ; reset rbx (only useful when using this macro more than once)
+    push rax        ; push rax onto the stack
+
+%%getStrLen:
+    inc rax         ; point rax to the next character of the string
+    inc rbx         ; add 1 to the string length counter
+    mov cl, [rax]   ; move the value of rax (char cl = *c)
+    cmp cl, 0       ; if cl is at the "null terminator"
+    jne %%getStrLen ; jump to local label getStrLen if cl != 0 (ne => not equal)
+
+    mov rax, SYS_WRITE  ; use defined sys_write
+    mov rdi, STDOUT
+    pop rsi             ; pop the message from the stack into rsi
+    mov rdx, rbx        ; move the counter into the rdx `parameter` of sys_write (which defines the size)
+    syscall
+%endmacro
+
+%macro getInput 0
+    mov rax, SYS_READ   ; use sys_read
+    mov rdi, STDIN      ; use standard input
+    mov rsi, input      ; use input as buffer to write input to
+    mov rdx, 16         ; dont write more than 16 bytes
+    syscall
+%endmacro
+
+section .bss
+    input resb 16       ; reserve 16 bytes for the input
+```
+<!--## Using multiple .asm files-->
+
+<!--### Extern-->
+<!--### Global-->
 
 ## Linux
 
