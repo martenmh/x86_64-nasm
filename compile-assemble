@@ -1,0 +1,9 @@
+#!/bin/bash
+
+nasm -f elf64 "${2}"
+
+name=$(echo "${2}" | cut -f 1 -d '.')
+
+g++ "${1}" "${name}.o" -no-pie
+./a.out
+rm a.out ${name}.o
