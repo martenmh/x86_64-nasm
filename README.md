@@ -16,5 +16,11 @@ chmod +x assemble
 ./assemble asmFile
 ```
 
+Use debug script to assemble, link & debug using gdb
+```
+chmod +x debug
+./debug asmFile
+```
+
 The object file & a.out will be removed after use
 .
