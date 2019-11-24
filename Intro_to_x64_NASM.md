@@ -1,66 +1,68 @@
-# NASM
-Created by martenmh.
-## Table of contents
-- [NASM](#nasm)
-  * [Table of contents](#table-of-contents)
-  * [The NASM Language](#the-nasm-language)
-  * [Registers](#registers)
-      - [16 bit 8086 Registers:](#16-bit-8086-registers-)
-      - [32 bit 80386 Registers:](#32-bit-80386-registers-)
-      - [64 bit Pentium IV Registers:](#64-bit-pentium-iv-registers-)
-  * [Operands](#operands)
-      - [Register Operands](#register-operands)
-      - [Memory Operands](#memory-operands)
-      - [Immediate Operands](#immediate-operands)
-- [Instructions with two memory operands are extremely rare.](#instructions-with-two-memory-operands-are-extremely-rare)
-  * [Sections](#sections)
-    + [Assembly sections](#assembly-sections)
-    + [Memory sections](#memory-sections)
-  * [ASM data types](#asm-data-types)
-  * [Defining data & Reserving space](#defining-data---reserving-space)
-  * [Some Instructions](#some-instructions)
-  * [Write some NASM!](#write-some-nasm-)
-      - [Defining main](#defining-main)
-      - [Assembling](#assembling)
-  * [Registers #2](#registers--2)
-    + [Flags](#flags)
-    + [Pointers](#pointers)
-  * [Control flow](#control-flow)
-    + [Jumps](#jumps)
-    + [Comparisons](#comparisons)
-    + [Comparisons & flags](#comparisons---flags)
-    + [Conditional flags](#conditional-flags)
-    + [Registers as pointers](#registers-as-pointers)
-    + [Calls](#calls)
+- [The NASM Language](#the-nasm-language)
+- [Registers](#registers)
+    + [16 bit 8086 Registers:](#16-bit-8086-registers-)
+    + [32 bit 80386 Registers:](#32-bit-80386-registers-)
+    + [64 bit Pentium IV Registers:](#64-bit-pentium-iv-registers-)
+- [Operands](#operands)
+    + [Register Operands](#register-operands)
+    + [Memory Operands](#memory-operands)
+    + [Immediate Operands](#immediate-operands)
+    + [Instructions with two memory operands are extremely rare.](#instructions-with-two-memory-operands-are-extremely-rare)
+- [Sections](#sections)
+  * [Assembly sections](#assembly-sections)
+  * [Memory sections](#memory-sections)
+- [ASM data types](#asm-data-types)
+- [Defining data & Reserving space](#defining-data---reserving-space)
+- [Some Instructions](#some-instructions)
+- [Write some NASM!](#write-some-nasm-)
+    + [Defining main](#defining-main)
+    + [Assembling](#assembling)
+- [Registers #2](#registers--2)
+  * [Flags](#flags)
+  * [Pointers](#pointers)
+- [Control flow](#control-flow)
+  * [Jumps](#jumps)
+  * [Comparisons](#comparisons)
+  * [Comparisons & flags](#comparisons---flags)
+  * [Conditional flags](#conditional-flags)
+  * [Registers as pointers](#registers-as-pointers)
+  * [Calls](#calls)
       - [Note: Calls are not functions and don't have to be explicitly called, they are labels to jump to, and will still run when executed by default (top to bottom).](#note--calls-are-not-functions-and-don-t-have-to-be-explicitly-called--they-are-labels-to-jump-to--and-will-still-run-when-executed-by-default--top-to-bottom-)
-  * [Programs](#programs)
-    + [Program: Hello World!](#program--hello-world-)
-    + [Program: Get user input](#program--get-user-input)
-  * [Math](#math)
-      - [Note, when using the div operation, if the rdx register is not 0 then the rdx will be concated on the rax register, acting like a 128 bit register. If rdx is 0, it will hold the remainder after a div.](#note--when-using-the-div-operation--if-the-rdx-register-is-not-0-then-the-rdx-will-be-concated-on-the-rax-register--acting-like-a-128-bit-register-if-rdx-is-0--it-will-hold-the-remainder-after-a-div)
-    + [How to display a digit](#how-to-display-a-digit)
-    + [The Stack](#the-stack)
-    + [Program: A simple for loop](#program--a-simple-for-loop)
-  * [Subroutine programs](#subroutine-programs)
-    + [Program: Print string v2](#program--print-string-v2)
-    + [Program: Print string v3 (simple)](#program--print-string-v3--simple-)
-  * [NASM macros](#nasm-macros)
-    + [Syntax](#syntax)
-    + [Inputs](#inputs)
-    + [Local labels](#local-labels)
-    + [Defining values with EQU (C/C++ Like defines)](#defining-values-with-equ--c-c---like-defines-)
-    + [Including external files](#including-external-files)
-    + [Program: input with macros](#program--input-with-macros)
-  * [Pointers & values](#pointers---values)
-  * [Program: print (more than one) numbers](#program--print--more-than-one--numbers)
-    + [The program](#the-program)
-    + [Debugging!](#debugging-)
-    + [The program with Code explenation](#the-program-with-code-explenation)
-  * [Linux](#linux)
-  * [Further reading:](#further-reading-)
-  * [Credits](#credits)
-
-
+- [Basic Programs](#basic-programs)
+  * [Program: Hello World!](#program--hello-world-)
+  * [Program: Get user input](#program--get-user-input)
+- [Math](#math)
+  * [Instructions](#instructions)
+      - [Note: when using the div operation, if the rdx register is not 0 then the rdx will be concated on the rax register, acting like a 128 bit register. If rdx is 0, it will hold the remainder after a div.](#note--when-using-the-div-operation--if-the-rdx-register-is-not-0-then-the-rdx-will-be-concated-on-the-rax-register--acting-like-a-128-bit-register-if-rdx-is-0--it-will-hold-the-remainder-after-a-div)
+  * [How to display a digit](#how-to-display-a-digit)
+  * [The Stack](#the-stack)
+  * [Program: A simple for loop](#program--a-simple-for-loop)
+- [Subroutine programs](#subroutine-programs)
+  * [Program: Print string v2](#program--print-string-v2)
+  * [Program: Print string v3 (simple)](#program--print-string-v3--simple-)
+- [NASM macros](#nasm-macros)
+  * [Syntax](#syntax)
+  * [Inputs](#inputs)
+  * [Local labels](#local-labels)
+  * [Defining values with EQU (C/C++ Like defines)](#defining-values-with-equ--c-c---like-defines-)
+  * [Including external files](#including-external-files)
+  * [Program: input with macros](#program--input-with-macros)
+- [Pointers & values](#pointers---values)
+- [Program: print (more than one) numbers](#program--print--more-than-one--numbers)
+  * [The program](#the-program)
+  * [Debugging!](#debugging-)
+- [Command line arguments](#command-line-arguments)
+- [Linux](#linux)
+  * [Files](#files)
+    + [Obtaining the filedescriptor with sys_open](#obtaining-the-filedescriptor-with-sys-open)
+      - [Note: sys_open returns the file descriptor of the file opened within the rax register.](#note--sys-open-returns-the-file-descriptor-of-the-file-opened-within-the-rax-register)
+    + [Program: Writing files with sys_write](#program--writing-files-with-sys-write)
+    + [Program: Reading files with sys_read](#program--reading-files-with-sys-read)
+  * [Syscall](#syscall)
+  * [Exit codes](#exit-codes)
+- [Further reading:](#further-reading-)
+- [Credits](#credits)
+  
 ## The NASM Language
 
 NASM is line-based. Most programs consist of `directives` followed by one or more `sections`. Lines can have an optional `label`. Most lines have an `instruction` followed by zero or more `operands`.
@@ -262,7 +264,7 @@ These can be written in many ways. Here are some examples from the official docs
 
 
 
-> # Instructions with two memory operands are extremely rare.
+> #### Instructions with two memory operands are extremely rare.
 > Most of the basic instructions have only the following forms:
 > * add reg, reg
 > * add reg, mem
@@ -387,6 +389,7 @@ resb            A pseudo-instruction that reserves bytes that will be in memory 
 
 
 ## Write some NASM!
+
 #### Defining main
 
 *When you are running assembly without a main from another program you can define main by:*
@@ -436,6 +439,7 @@ Running
 
 
 ## Registers #2
+
 ### Flags
 Flags hold a single value, either a 1 or a 0.
 Each bit in the flags register is a flag, some of these are:
@@ -550,6 +554,8 @@ Loads the value the rbx register is pointing to into the rax register
 Calls and jumps are essentially the same however when `call` is used the
 original position the call was made from can be returned to using `ret`.
 *This is called a `subroutine`*
+
+
 ##### Note: Calls are not functions and don't have to be explicitly called, they are labels to jump to, and will still run when executed by default (top to bottom).
 
 
@@ -576,7 +582,8 @@ _printHello:         ; subroutine printHello
 msg:	db "Hello, World!", 10	; newline = ', 10'
 ```
 
-## Programs
+## Basic Programs
+
 ### Program: Hello World!
 ```
 section .data
@@ -630,6 +637,8 @@ add rax, 5      ; the value of rax is incremented by 5
 sub rbx, rax    ; the value of rbx is decremented by rax
 ```
 
+### Instructions
+
 | Operation Name | Operation Name (signed) | Description     |
 |:---------------|:------------------------|:----------------|
 | add a, b       |                         | a = a + b       |
@@ -650,7 +659,7 @@ Actually does:
 ```
 rax = rax * rbx
 ```
-##### Note, when using the div operation, if the rdx register is not 0 then the rdx will be concated on the rax register, acting like a 128 bit register. If rdx is 0, it will hold the remainder after a div.
+##### Note: when using the div operation, if the rdx register is not 0 then the rdx will be concated on the rax register, acting like a 128 bit register. If rdx is 0, it will hold the remainder after a div.
 
 ```
 mov rax, 26
@@ -1254,7 +1263,7 @@ mov rsi, 64 + 1     ; 64 = O_CREAT + 1 = O_WRONLY
 mov rdx, 0644o      ; 0644o is an octal value for the permissions
 ```
 
-##### Note, sys_open returns the file descriptor of the file opened within the rax register.
+##### Note: sys_open returns the file descriptor of the file opened within the rax register.
 
 
 
@@ -1321,12 +1330,11 @@ Now we can use the file descriptor in rax and read the file
 mov rdi, rax        ; file descriptor from sys_open 
 mov rax, 0          ; sys_read ID
 mov rsi, text       ; buffer for the read text
-mov rdx. 17         ; the number of bytes to be read
+mov rdx, 17         ; the number of bytes to be read
 syscall
 ```
 
 and close the file
-
 
 ### Syscall
 Syscalls can be seen at table.md

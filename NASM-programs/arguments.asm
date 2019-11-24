@@ -61,6 +61,7 @@ section .bss
     valBuf resb 2       ; reserve 2 bytes for argument counter ( i've got 99 arguments but.. [ insert something funny ] )
     bufPtr resb 8       ; reserve 4 bytes, ( the same as the amount of bytes in an int on my machine )
     argc resb 3
+    args resb 100
 
 section .data
     newLine db 10,0
@@ -85,14 +86,43 @@ _start:
 
     pop rax     ; pop argc into rax
     printVal rax
-    cmp rax, 2
 
-
-    jl _printNotEnoughArguments
-    jg _printTooManyArguments
 
     pop rax
-    printVal rax
+
+    mov [args], rax
+
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, [args]
+    mov rdx, 8
+    syscall
+
+
+        mov rax, 1
+        mov rdi, 1
+        mov rsi, newLine
+        mov rdx, 1
+        syscall
+
+        pop rax
+
+        mov [args], rax
+
+        mov rax, 1
+        mov rdi, 1
+        mov rsi, [args]
+        mov rdx, 8
+        syscall
+
+
+
+        mov rax, 1
+        mov rdi, 1
+        mov rsi, newLine
+        mov rdx, 1
+        syscall
+
      exit 0
 
 
