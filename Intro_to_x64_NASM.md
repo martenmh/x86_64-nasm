@@ -1,6 +1,8 @@
 # NASM
 Created by martenmh.
 ## Table of contents
+- [NASM](#nasm)
+  * [Table of contents](#table-of-contents)
   * [The NASM Language](#the-nasm-language)
   * [Registers](#registers)
       - [16 bit 8086 Registers:](#16-bit-8086-registers-)
@@ -12,12 +14,14 @@ Created by martenmh.
       - [Immediate Operands](#immediate-operands)
 - [Instructions with two memory operands are extremely rare.](#instructions-with-two-memory-operands-are-extremely-rare)
   * [Sections](#sections)
+    + [Assembly sections](#assembly-sections)
+    + [Memory sections](#memory-sections)
   * [ASM data types](#asm-data-types)
   * [Defining data & Reserving space](#defining-data---reserving-space)
   * [Some Instructions](#some-instructions)
   * [Write some NASM!](#write-some-nasm-)
       - [Defining main](#defining-main)
-      - [Assembling](#assembling)Sof
+      - [Assembling](#assembling)
   * [Registers #2](#registers--2)
     + [Flags](#flags)
     + [Pointers](#pointers)
@@ -33,16 +37,28 @@ Created by martenmh.
     + [Program: Hello World!](#program--hello-world-)
     + [Program: Get user input](#program--get-user-input)
   * [Math](#math)
+      - [Note, when using the div operation, if the rdx register is not 0 then the rdx will be concated on the rax register, acting like a 128 bit register. If rdx is 0, it will hold the remainder after a div.](#note--when-using-the-div-operation--if-the-rdx-register-is-not-0-then-the-rdx-will-be-concated-on-the-rax-register--acting-like-a-128-bit-register-if-rdx-is-0--it-will-hold-the-remainder-after-a-div)
     + [How to display a digit](#how-to-display-a-digit)
     + [The Stack](#the-stack)
     + [Program: A simple for loop](#program--a-simple-for-loop)
   * [Subroutine programs](#subroutine-programs)
     + [Program: Print string v2](#program--print-string-v2)
     + [Program: Print string v3 (simple)](#program--print-string-v3--simple-)
+  * [NASM macros](#nasm-macros)
+    + [Syntax](#syntax)
+    + [Inputs](#inputs)
+    + [Local labels](#local-labels)
+    + [Defining values with EQU (C/C++ Like defines)](#defining-values-with-equ--c-c---like-defines-)
+    + [Including external files](#including-external-files)
+    + [Program: input with macros](#program--input-with-macros)
+  * [Pointers & values](#pointers---values)
+  * [Program: print (more than one) numbers](#program--print--more-than-one--numbers)
+    + [The program](#the-program)
+    + [Debugging!](#debugging-)
+    + [The program with Code explenation](#the-program-with-code-explenation)
   * [Linux](#linux)
   * [Further reading:](#further-reading-)
-  * [Credits:](#crdits)
-
+  * [Credits](#credits)
 
 
 ## The NASM Language
@@ -255,11 +271,50 @@ These can be written in many ways. Here are some examples from the official docs
 > * add mem, imm
 
 ## Sections
-* `.bss` The .bss section is for writable data.
+source = [https://en.wikipedia.org/wiki/Data_segment](https://en.wikipedia.org/wiki/Data_segment)
+
+> A computer program memory can be largely categorized into two sections: read-only and read-write.
+> This distinction grew from early systems holding their main program in read-only memory such as Mask ROM, PROM or EEPROM. 
+> As systems became more complex and programs were loaded from other media into 
+> RAM instead of executing from ROM the idea that some portions of the program's memory should not be modified was retained. 
+> These became the .text and .rodata segments of the program, and the remainder which could be written to divided into a number of other segments for specific tasks.
+
+### Assembly sections
+* `.data` The .data segment contains any global or static variables which have a pre-defined value and can be modified.
+
+( Initialized data )
+> The .data segment contains any global or static variables which have a pre-defined value and can be modified. 
+> That is any variables that are not defined within a function (and thus can be accessed from anywhere) 
+> or are defined in a function but are defined as static so they retain their address across subsequent calls
+
+* `.bss` The BSS segment, also known as uninitialized data, is usually adjacent to the data segment.
+
+( Uninitialized data )
+> The BSS segment, also known as uninitialized data, is usually adjacent to the data segment. 
+> The BSS segment contains all global variables and 
+> static variables that are initialized to zero or do not have explicit initialization in source code.
 
 * `.text` The .text section is generally for code
+> The code segment, also known as a text segment or simply as text, 
+> is where a portion of an object file or the corresponding section of the program's virtual address space
+> that contains executable instructions is stored and is generally read-only and fixed size.
+ 
+### Memory sections
+* The heap
+> The heap area commonly begins at the end of the .bss and .data segments and grows to larger addresses from there. 
+> The heap area is managed by malloc, calloc, realloc, and free, 
+> which may use the brk and sbrk system calls to adjust its size 
+> (note that the use of brk/sbrk and a single "heap area" is not required to fulfill the contract of malloc/calloc/realloc/free; 
+> they may also be implemented using mmap/munmap to reserve/unreserve potentially non-contiguous regions of virtual memory into the process' 
+> virtual address space). 
+> The heap area is shared by all threads, shared libraries, and dynamically loaded modules in a process. 
 
-* `.data` The .data section is for constant data
+* The stack
+> The stack area contains the program stack, a LIFO structure, typically located in the higher parts of memory. 
+> A "stack pointer" register tracks the top of the stack; 
+> it is adjusted each time a value is "pushed" onto the stack. 
+> The set of values pushed for one function call is termed a "stack frame". 
+> A stack frame consists at minimum of a return address. Automatic variables are also allocated on the stack. 
 
 ## ASM data types
 Integer:
@@ -495,7 +550,7 @@ Loads the value the rbx register is pointing to into the rax register
 Calls and jumps are essentially the same however when `call` is used the
 original position the call was made from can be returned to using `ret`.
 *This is called a `subroutine`*
-#### Note: Calls are not functions and don't have to be explicitly called, they are labels to jump to, and will still run when executed by default (top to bottom).
+##### Note: Calls are not functions and don't have to be explicitly called, they are labels to jump to, and will still run when executed by default (top to bottom).
 
 
 for example:
@@ -595,7 +650,16 @@ Actually does:
 ```
 rax = rax * rbx
 ```
+##### Note, when using the div operation, if the rdx register is not 0 then the rdx will be concated on the rax register, acting like a 128 bit register. If rdx is 0, it will hold the remainder after a div.
 
+```
+mov rax, 26
+mov rbx, 3
+div rbx     ; rax / rbx => rax = 12
+            ; rdx holds 2
+            ; this is the value that comes from the modulus operator (%) in higher languages.
+
+```  
 ### How to display a digit
 To display a single digit:
 > *Note:* "`digit`" is actually defined with two bytes, 
@@ -961,9 +1025,325 @@ section .bss
 <!--### Extern-->
 <!--### Global-->
 
+## Pointers & values
+Think of the difference between these 2 instructions:
+```
+mov cl, buffer
+mov cl, [buffer]
+```
+`mov cl, buffer` will move the *address* of buffer to cl(which may or 
+
+
+## Program: print (more than one) numbers
+
+### The program
+
+```
+section .bss
+    digitSpace resb 100     ; buffer for the output
+    digitSpacePos resb 8    ; Pointer to the current character in digitSpace
+
+; Small note. Why use digitSpacePos instead of just rcx?
+; after using a sys_write syscall the rcx register will be changed implicitly,
+; so you need to "back it up" into another variable
+
+%include "macros.inc"
+
+section .text
+    Global _start
+_start:
+    ; How the algorithm works:
+    ; 503 / 10 = 50 R 3
+    ;       store 3
+    ; 50 / 10 = 5 R 0
+    ;       store 0
+    ; 50 / 10 = 0 R 5
+    ;       store 5
+
+    ; = 305
+    ; print backwards = 503
+
+    mov rax, 503
+    call _printRAX
+    exit 0
+
+_printRAX:
+    mov rcx, digitSpace         ; mov address of digitSpace into rcx
+    mov rbx, 10
+    mov [rcx], rbx              ; write a new line character (ASCII '0' = 10)
+    inc rcx                     ; point rcx to the next byte for writing
+    mov [digitSpacePos], rcx    ; point digitSpacePos to the next byte ( store rcx )
+
+_getRAXValueLoop:
+    mov rdx, 0
+    mov rbx, 10
+    div rbx         ; rax / rbx (503 / 10) = 50 Rest 3
+    ; As noted, rdx stores the Rest value if rdx is 0 before the div instruction
+
+    add rdx, 48     ; make it like the ASCII number ( because ASCII numbers start at 48 )
+
+    mov rcx, [digitSpacePos]    ; place digitSpacePos back in rcx ( restore digitSpacePos into rcx)
+    mov [rcx], dl               ; write the character from rdx into the digitSpace buffer
+    inc rcx                     ; point to the next byte for writing
+    mov [digitSpacePos], rcx    ; point digitSpacePos to the next byte
+    cmp rax, 0                  ; if rax != 0 ( because it is null terminating string ) => goto _getRAXValueLoop
+    ; Keep writing values into the buffer until the null terminator is reached.
+    jne _getRAXValueLoop
+
+_printRAXLoop:
+    mov rcx, [digitSpacePos]    ; restore digitSpacePos into rcx
+
+    mov rax, 1                  ; sys_write
+    mov rdi, 1                  ; standard input
+    mov rsi, rcx                ; set source index
+    mov rdx, 1                  ; write 1 character
+    syscall
+
+    mov rcx, [digitSpacePos]    ; restore digitSpacePos into rcx
+    dec rcx                     ; point to the "next" (previous) character in the buffer
+    mov [digitSpacePos], rcx    ; store rcx
+
+    cmp rcx, digitSpace         ; if rcx >= digitSpace[0] goto _printRAXLoop
+    ; Keep printing values until the newline character (digitSpace[0]) is hit
+    jge _printRAXLoop           ; after the new line character has been hit (when rcx == digitSpace)
+    ; rcx will be 0 ( because resb zeroes out all reserved space) which is smaller than digitSpace.
+    ; So rcx < digitSpace and jge won't cause the program to go back to _printRAXLoop
+
+    ret                         ; return where called for exit
+```
+
+
+### Debugging!
+How to debug an assembly program?
+
+[web.cecs.pdx.edu/gdb.pdf](http://web.cecs.pdx.edu/~apt/cs491/gdb.pdf)
+
+make executable from .asm
+```
+nasm -felf64 numbers.asm
+ld numbers.o
+gdb a.out
+```
+or use the `./debug` script
+```
+./debug file.asm
+```
+
+some commands in gdb:
+* `run` to run the program
+* `info register` to print out all registers
+* `break _subroutine` to set a breakpoint at the start of a subroutine
+* `continue` to continue executing the program after a breakpoint has been reached.
+* `whe` to show the call stack
+* `step i` to execute a single instruction.
+* `next i` like step i, except that if the instruction is a subroutine call the entire subroutine is executed before control returns to the console.( basically skip the function implementation ) 
+
+
+## Command line arguments
+When a program is executed from the command line, arguments can be passed into it.
+After the name of the program to execute, the arguments are seperated by spaces.
+<br><br>
+
+All arguments are strings, not integers.
+`$ ./program arg1 arg2 arg3 etc`
+
+
+When the program is executed, the arguments are automatically loaded onto the stack.
+The top item is the number of arguments. This number is always at least 1. (argc in C & C++)
+The next items in the stack are pointers to the zero-terminated
+string starting the path of the program (eg `./program`) then of each individual arguments.
+<br><br>
+
+`*arg[1]` is the first user defined argument.
+ 
+Stack:
+* `argc`
+* `*path`
+* `*arg[1]`
+* `*arg[2]`
+* `...`
+* `*arg[n]`
+
+
+Example:
+* `argc` = 3
+* `*path` = "./program"
+* `*arg[1]` = "argument1"
+* `*arg[2]` = "argument2"
+
 ## Linux
 
+### Files
+
+
+
+
+File modes specify the permissions for files.
+They specify who is allowed to read, write, and/or execute the file.
+
+Modes are stored as a three digit octal value
+
+| Value | Read | Write | Execute |
+|:------|:-----|:------|:--------|
+| 0                           ||||
+| 1                  ||| X       |
+| 2           || X              ||
+| 3           || X     | X       |
+| 4     | X                    |||
+| 5     | X           || X       |
+| 6     | X    | X              ||
+| 7     | X    | X     | X       |
+
+You cann add 2 values together if you want to have those rows of permissions:
+
+1 ( Only execute ) + 2 ( Only write ) = 3 ( Write & Execute )
+
+In linux file permissions are set with four octal values. The least 3 significant octal 
+values are for the file owner's permission, the group's permissions, and the "other's" permissions
+
+The most significant octal value is reserved for special permissions ( Usually not necessary )  <br><br>
+
+| Special  |Owner|Group|Other|
+|---|---|---|---|
+| sticky bit  |execute|execute|execute|
+|  setgid |write|write|write|
+|  setuid |read|read|read|
+
+(Special is usually set to 0)
+
+We've used `sys_read` & `sys_write` before as reading and writing console input & output.
+We can also use them for reading & writing to files
+For this, you need the *filedescriptor*, which can be obtained by `sys_open`
+
+#### Obtaining the filedescriptor with sys_open
+
+| System call | rax (ID) | rdi                  | rsi       | rdx | r10 | r8 | r9 |
+|:------------|:---------|:---------------------|:----------|:----|:----|:---|:---|
+| sys_open    | 2        | const char *filename | int flags | int mode         ||||
+
+* The first argument for sys_open takes is a pointer to the filename (zero terminated).
+* The second argument are the flags. 
+* The third argument is the file mode, being the 4-digit octal number that we learned from earlier.
+
+Flags:
+
+| Flag name   | Value   | log2(value) | Actual name            |
+|:------------|:--------|:------------|:-----------------------|
+| O_RDONLY    | 0       | null        | Read only              |
+| O_WRONLY    | 1       | 0           | Write only             |
+| O_RDWR      | 2       | 1           | Read Write             |
+| O_CREAT     | 64      | 6           | Create (if not exists) |
+| O_APPEND    | 1024    | 10                                  ||
+| O_DIRECTORY | 65536   | 16                                  ||
+| O_PATH      | 2097152 | 21                                  ||
+| O_TMPFILE   | 4194304 | 22                                  ||
+
+If you want to execute multiple flags you cann add them together.
+
+Code to open a file with the "create" and "write" flag.
+```
+mov rax, 1          ; system call ID for sys_open
+mov rdi, filename   ; pointer to null terminated string
+mov rsi, 64 + 1     ; 64 = O_CREAT + 1 = O_WRONLY
+
+                    ; you can also use defines: 
+                    ; O_CREAT equ 64
+                    ; O_WRONLY equ 1
+                    ; mov rsi, O_CREAT + O_WRONLY
+                    
+mov rdx, 0644o      ; 0644o is an octal value for the permissions
+```
+
+##### Note, sys_open returns the file descriptor of the file opened within the rax register.
+
+
+
+#### Program: Writing files with sys_write
+
+| System call | rax (ID) | rdi                         | rsi                | rdx          | r10 | r8  | r9  |
+|:------------|:---------|:----------------------------|:-------------------|:-------------|:----|:----|:----|
+| sys_write   | 1        | unsigned int filedescriptor | const char *buffer | size_t count | ... | ... | ... |
+
+sys_write can be used to write text to a file.
+
+It's exactly like in the hello world program, except the rdi is changed to the file descriptor (in `rax`) returned from the sys_open syscall.
+
+```
+%include "macros.inc"
+
+section .data
+    filename db "file.txt",0    ; create null terminated string for sys_open
+    text db "Well, hello there.", 10
+    textLen equ $-text          ; calculate the string length of the text variable
+
+section .text
+    Global _start
+_start:
+    ; Open
+    mov rax, SYS_OPEN           ; sys_open ID
+    mov rdi, filename           ; pointer to filename with a null terminator
+    mov rsi, O_CREAT+O_WRONLY   ; set to create file
+    mov rdx, 0644o              ; with permission 644
+    syscall
+
+    ; Write
+    mov rdi, rax                ; get file descriptor from rax because of the previous syscall (assuming sys_open was successful)
+    mov rax, SYS_WRITE          ; sys_write ID
+    mov rsi, text               ; pointer to text
+    mov rdx, textLen            ; the number of bytes to write
+    syscall
+
+    ; Close
+    mov rax, SYS_CLOSE          ; sys_close ID
+    pop rdi                     ; this is the file descriptor of the file to close, it assumes it is on the top of the stack
+    syscall
+
+    exit 0
+```
+
+#### Program: Reading files with sys_read
+| System call | rax (ID) | rdi                         | rsi                | rdx          | r10 | r8  | r9  |
+|:------------|:---------|:----------------------------|:-------------------|:-------------|:----|:----|:----|
+| sys_read    | 0        | unsigned int filedescriptor | char *buffer       | size_t count | ... | ... | ... |
+
+First we have to use sys_open to get the file descriptor ( as is stated above ).
+But now we don't need the writing flag, only the reading flag:
+```
+mov rax, 2          ; sys_open ID
+mov rdi, filename   ; pointer to zero-terminated string for the file name
+mov rsi, 0          ; O_RDONLY read only flag 
+mov rdx, 0644o      ; file permissions ( octal value )
+syscall
+```
+
+Now we can use the file descriptor in rax and read the file
+```
+mov rdi, rax        ; file descriptor from sys_open 
+mov rax, 0          ; sys_read ID
+mov rsi, text       ; buffer for the read text
+mov rdx. 17         ; the number of bytes to be read
+syscall
+```
+
+and close the file
+
+
+### Syscall
 Syscalls can be seen at table.md
+
+Here are the most important ones
+
+| System call | rax (ID) | rdi                         | rsi                | rdx          | r10 | r8  | r9  |
+|:------------|:---------|:----------------------------|:-------------------|:-------------|:----|:----|:----|
+| sys_read    | 0        | unsigned int filedescriptor | char *buffer       | size_t count | ... | ... | ... |
+| sys_write   | 1        | unsigned int filedescriptor | const char *buffer | size_t count | ... | ... | ... |
+| sys_open    | 2        | const char *filename        | int flags          | int mode     | ... | ... | ... |
+| sys_close   | 3        | unsigned int filedescriptor | ...                | ...          | ... | ... | ... |
+| ...         | ...      | ...                         | ...                | ...          | ... | ... | ... |
+| pwritev2    | 328      | ...                         | ...                | ...          | ... | ... | ... |
+
+
+### Exit codes
 <br>
 
 exit codes:
@@ -992,6 +1372,14 @@ echo $?
 [intel.com](https://software.intel.com/en-us/articles/intel-sdm) 
 
 [blog.rchapman.org/Linux_System_Call_Table_for_x86_64](https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64)
+
+[web.cecs.pdx.edu/gdb.pdf](http://web.cecs.pdx.edu/~apt/cs491/gdb.pdf)
+
+[wikipedia.org/Data_segment](https://en.wikipedia.org/wiki/Data_segment)
+
+kupala's macro's files.
+[pastebin.com](https://pastebin.com/wCNZs3RN)
+
 
 ## Credits
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
