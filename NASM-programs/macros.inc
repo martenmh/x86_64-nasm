@@ -1,7 +1,21 @@
+; Flags
+O_RDONLY equ 0
+O_WRONLY equ 1
+O_RDWR equ 2
+O_CREAT equ 64
+O_APPEND equ 1024
+O_DIRECTORY equ 65536
+O_PATH equ 2097152
+O_TMPFILE equ 4194304
+
+
 SYS_READ equ 0      ; define sys_read
 SYS_WRITE equ 1     ; define sys_write
+SYS_OPEN equ 2      ; define sys_open
+SYS_CLOSE equ 3     ; define sys_close
 SYS_EXIT equ 60     ; define sys_exit
 
+; file descriptor
 STDIN equ 0         ; define stdin
 STDOUT equ 1        ; define stdout
 STDERR equ 2        ; define stderr

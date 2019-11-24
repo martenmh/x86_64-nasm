@@ -1,0 +1,16 @@
+
+#!/bin/bash
+
+nasm -f elf64 "${1}"
+
+name=$(echo "${1}" | cut -f 1 -d '.')
+
+arg="${@}"
+args=$(echo "$arg" | awk '{for (i=2; i<NF; i++) printf $i " "; print $NF}')
+
+echo "$args"
+ld "${name}.o"
+echo ./a.out "$args"
+./a.out $args
+rm a.out ${name}.o
+
