@@ -1,8 +1,10 @@
 #!/bin/bash
 
 nasm -f elf64 "${1}"
-name=$(echo "${1}" | cut -f 1 -d '.')
 
-ld "${name}.o"
-gdb a.out
-rm a.out ${name}.o
+name=$(echo "${1}" | cut -f 1 -d '.')
+g++ ${1}
+
+
+objdump -M intel -d a.out
+rm a.out

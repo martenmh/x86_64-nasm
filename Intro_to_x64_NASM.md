@@ -1148,7 +1148,7 @@ some commands in gdb:
 * `next i` like step i, except that if the instruction is a subroutine call the entire subroutine is executed before control returns to the console.( basically skip the function implementation ) 
 
 
-## Command line arguments
+## Command line arguments TODO
 When a program is executed from the command line, arguments can be passed into it.
 After the name of the program to execute, the arguments are seperated by spaces.
 <br><br>
@@ -1370,6 +1370,79 @@ echo $?
 ```
 
 
+## Pausing a program
+Defining data:
+
+| Define | Meaning               | Value (bits) |
+|:-------|:----------------------|:-------------|
+| db     | Define bytes          | 8            |
+| dw     | Define word           | 16           |
+| dd     | Define double word    | 32           |
+| dq     | Define quadruple word | 64           |
+
+### Timespec
+"Timespec" is a structure which holds two values, tv_sec and tv_nsec.
+tv_sec and tv_nsec are both 64-bit integer values, in other words, they are qwords.
+
+
+The max value for tv_nsec is 999.999.999 because 1 second = 1.000.000.000 nanoseconds
+
+The two arguments are both pointers to timespec values.
+
+The first argument is the length of the delay, the second is often just left blank.
+
+| System call | rax (ID) | rdi                         | rsi                | rdx          | r10 | r8  | r9  |
+|:------------|:---------|:----------------------------|:-------------------|:-------------|:----|:----|:----|
+| sys_nanosleep    | 35        | struct timespec *rqtp | struct timespec *rmtp       | size_t count | ... | ... | ... |
+
+### Program: sleep
+```
+section .data
+    delay dq 5,500000000    ; set tv_sec and tv_nsec values to initialize timespec struct
+    sleepMsg db "Sleeping 5.5 seconds...",10,0
+    sleepMsgLen equ $-sleepMsg
+    stopMsg db "quit",10,0
+    stopMsgLen equ $-stopMsg
+
+section .text
+    global _start
+_start:
+
+    mov rax, 1              ; sys_write
+    mov rdi, 1              ; stdout
+    mov rsi, sleepMsg       ; point to message buffer
+    mov rdx, sleepMsgLen    ; size to be written
+    syscall
+
+    mov rax, 35             ; sys_nanosleep
+    mov rdi, delay          ; amount ( pointer to initialized timespec struct )
+    mov rsi, 0
+    syscall
+
+    mov rax, 1              ; sys_write
+    mov rdi, 1              ; stdout
+    mov rsi, stopMsg        ; point to message buffer
+    mov rdx, stopMsgLen     ; size to write
+    syscall
+
+    mov rax, 60             ; sys_exit
+    mov rdi, 0              ; exit code
+    syscall
+
+```
+
+## Arrays
+
+## Multi threading
+## Dynamic memory allocation
+We've used the stack with `push`, `pop` & `peek`, with the stack we can allocate memory if we know the size at compile time. However, when we need to dynamically allocate memory we have to use the heap.
+To do this we have to use sys_brk 
+
+## Recursion
+
+### Program: Factorial
+
+## Advanced instructions
 
 ## Further reading:
 
@@ -1388,6 +1461,7 @@ echo $?
 kupala's macro's files.
 [pastebin.com](https://pastebin.com/wCNZs3RN)
 
+[cs.uaf.edu/memory_allocation](https://www.cs.uaf.edu/2015/fall/cs301/lecture/09_23_allocation.html)
 
 ## Credits
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
